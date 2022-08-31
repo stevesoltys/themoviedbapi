@@ -7,6 +7,7 @@ import info.movito.themoviedbapi.model.Genre;
 import info.movito.themoviedbapi.model.Multi;
 import info.movito.themoviedbapi.model.core.ResultsPage;
 import info.movito.themoviedbapi.model.people.Person;
+import info.movito.themoviedbapi.model.providers.ProviderResults;
 
 import java.util.List;
 
@@ -91,6 +92,9 @@ public class TvSeries extends AbstractTvElement implements Multi {
     @JsonProperty("content_ratings")
     private ContentRating.Results contentRatings;
 
+    @JsonProperty("watch/providers")
+    private ProviderResults watchProviders;
+
     public List<Person> getCreatedBy() {
         return createdBy;
     }
@@ -150,6 +154,9 @@ public class TvSeries extends AbstractTvElement implements Multi {
         return backdropPath;
     }
 
+    public ProviderResults getWatchProviders() {
+        return watchProviders;
+    }
 
     public String getPosterPath() {
         return posterPath;
@@ -302,6 +309,9 @@ public class TvSeries extends AbstractTvElement implements Multi {
         this.status = status;
     }
 
+    public void setWatchProviders(ProviderResults watchProviders) {
+        this.watchProviders = watchProviders;
+    }
 
     public List<ContentRating> getContentRatings() {
         return contentRatings != null ? contentRatings.getContentRatings() : null;

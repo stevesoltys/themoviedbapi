@@ -4,27 +4,81 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import info.movito.themoviedbapi.model.config.Timezone;
 import info.movito.themoviedbapi.model.core.TvKeywords;
+import info.movito.themoviedbapi.model.providers.ProviderResults;
+import info.movito.themoviedbapi.model.providers.WatchProviders;
 import info.movito.themoviedbapi.model.tv.TvEpisode;
 import info.movito.themoviedbapi.model.tv.TvSeason;
 import info.movito.themoviedbapi.model.tv.TvSeries;
+import info.movito.themoviedbapi.tools.ApiUrl;
+import info.movito.themoviedbapi.tools.RequestMethod;
+import info.movito.themoviedbapi.tools.UrlReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.io.IOException;
+
+import static info.movito.themoviedbapi.TmdbMovies.TMDB_METHOD_MOVIE;
+import static info.movito.themoviedbapi.TmdbTV.TMDB_METHOD_TV;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 
 public class SeriesApiTest extends AbstractTmdbApiTest {
 
     public static final int BREAKING_BAD_SERIES_ID = 1396;
 
+    @Test
+    public void testGetWatchProviders() throws IOException {
+        UrlReader mockUrlReader = mock(UrlReader.class);
+
+        String configResponse = TestUtils.getFixture("fixtures/config_response.json");
+        String mockResponse = TestUtils.getFixture("fixtures/watch_providers.json");
+
+        ApiUrl configApiUrl = new ApiUrl("configuration");
+        configApiUrl.addParam("api_key", getApiKey());
+
+        doReturn(configResponse)
+                .when(mockUrlReader)
+                .request(
+                        argThat(url -> url.getPath().equals(new ApiUrl("configuration").buildUrl().getPath())),
+                        eq(null),
+                        eq(RequestMethod.GET));
+
+        TmdbApi testTmdb = new TmdbApi("dummy_api", mockUrlReader, true);
+
+        int seriesId = 1234;
+        ApiUrl expected = new ApiUrl(TMDB_METHOD_TV, seriesId, TmdbTV.TvMethod.watch_providers);
+        doReturn(mockResponse)
+                .when(mockUrlReader)
+                .request(
+                        argThat(url -> url.getPath().equals(expected.buildUrl().getPath())),
+                        eq(null),
+                        eq(RequestMethod.GET));
+
+        ProviderResults results = testTmdb.getTvSeries().getWatchProviders(seriesId);
+
+        assertTrue(true);
+        assertEquals(41, results.getResults().size());
+
+        WatchProviders gbProvider = results.getProvidersForCountry("GB");
+        assertNotNull(gbProvider);
+        assertEquals(8, gbProvider.getRentProviders().size());
+        assertEquals(6, gbProvider.getBuyProviders().size());
+        assertEquals(1, gbProvider.getFlatrateProviders().size());
+        assertEquals("Virgin TV Go", gbProvider.getFlatrateProviders().get(0).getProviderName());
+    }
 
     @Test
     public void getSeries() {
-        TvSeries result = tmdb.getTvSeries().getSeries(BREAKING_BAD_SERIES_ID, LANGUAGE_ENGLISH, TmdbTV.TvMethod.credits, TmdbTV.TvMethod.external_ids);
+        TvSeries result = tmdb.getTvSeries().getSeries(BREAKING_BAD_SERIES_ID, LANGUAGE_ENGLISH,
+                TmdbTV.TvMethod.credits, TmdbTV.TvMethod.external_ids, TmdbTV.TvMethod.watch_providers);
 
         assertNotNull("No results found", result);
         Assert.assertTrue("No results found", result.getNetworks().size() == 1);
+        assertFalse(result.getWatchProviders().getResults().isEmpty());
     }
 
     @Test

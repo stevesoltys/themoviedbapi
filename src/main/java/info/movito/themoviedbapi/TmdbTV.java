@@ -5,6 +5,7 @@ import info.movito.themoviedbapi.model.Credits;
 import info.movito.themoviedbapi.model.MovieImages;
 import info.movito.themoviedbapi.model.config.Timezone;
 import info.movito.themoviedbapi.model.core.TvKeywords;
+import info.movito.themoviedbapi.model.providers.ProviderResults;
 import info.movito.themoviedbapi.model.tv.TvSeries;
 import info.movito.themoviedbapi.tools.ApiUrl;
 
@@ -24,7 +25,27 @@ public class TmdbTV extends AbstractTmdbApi {
     public static final String TMDB_METHOD_KEYWORDS = "keywords";
 
 
-    public static enum TvMethod {credits, external_ids, images, videos, recommendations, keywords, content_ratings}
+    public static enum TvMethod {
+        credits, external_ids, images, videos, recommendations, keywords, content_ratings,
+        watch_providers("watch/providers");
+
+        private String name;
+
+        TvMethod() {}
+
+        TvMethod(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            if (name != null) {
+                return name;
+            }
+
+            return super.toString();
+        }
+    }
 
 
     TmdbTV(TmdbApi tmdbApi) {
@@ -123,5 +144,11 @@ public class TmdbTV extends AbstractTmdbApi {
         apiUrl.addLanguage(language);
 
         return mapJsonResult(apiUrl, ContentRating.Results.class);
+    }
+
+    public ProviderResults getWatchProviders(int seriesId) {
+        ApiUrl apiUrl = new ApiUrl(TMDB_METHOD_TV, seriesId, TvMethod.watch_providers);
+
+        return mapJsonResult(apiUrl, ProviderResults.class);
     }
 }
